@@ -1,4 +1,109 @@
-﻿import express from "express";
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
+import authRoutes from "./src/routes/authRoutes.js";
+import categoryRoutes from "./src/routes/categoryRoutes.js";
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Configuration Swagger
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Leboncoin-like API",
+      version: "1.0.0",
+      description: "Une API REST pour une plateforme de petites annonces similaire à Leboncoin",
+      contact: {
+        name: "API Support",
+        email: "support@leboncoin-api.com"
+      }
+    },
+    servers: [
+      {
+        url: `http://localhost:${process.env.PORT || 4000}`,
+        description: "Serveur de développement"
+      }
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      },
+      schemas: {
+        User: {
+          type: "object",
+          properties: {
+            id: { type: "integer", description: "ID unique de l'utilisateur" },
+            email: { type: "string", format: "email", description: "Email de l'utilisateur" },
+            name: { type: "string", description: "Nom de l'utilisateur" },
+            phone: { type: "string", nullable: true, description: "Numéro de téléphone (optionnel)" },
+            createdAt: { type: "string", format: "date-time", description: "Date de création" },
+            updatedAt: { type: "string", format: "date-time", description: "Date de dernière mise à jour" }
+          }
+        },
+        Category: {
+          type: "object",
+          properties: {
+            id: { type: "integer", description: "ID unique de la catégorie" },
+            name: { type: "string", description: "Nom de la catégorie" },
+            slug: { type: "string", description: "Slug URL-friendly de la catégorie" },
+            createdAt: { type: "string", format: "date-time", description: "Date de création" },
+            _count: {
+              type: "object",
+              properties: {
+                listings: { type: "integer", description: "Nombre d'annonces dans cette catégorie" }
+              }
+            }
+          }
+        },
+        Listing: {
+          type: "object",
+          properties: {
+            id: { type: "integer", description: "ID unique de l'annonce" },
+            title: { type: "string", description: "Titre de l'annonce" },
+            description: { type: "string", description: "Description de l'annonce" },
+            price: { type: "number", format: "decimal", description: "Prix de l'annonce" },
+            location: { type: "string", description: "Localisation de l'annonce" },
+            status: { 
+              type: "string", 
+              enum: ["ACTIVE", "SOLD", "ARCHIVED"], 
+              description: "Statut de l'annonce"
+            },
+            userId: { type: "integer", description: "ID de l'utilisateur propriétaire" },
+            categoryId: { type: "integer", description: "ID de la catégorie" },
+            createdAt: { type: "string", format: "date-time", description: "Date de création" },
+            updatedAt: { type: "string", format: "date-time", description: "Date de dernière mise à jour" }
+          }
+        },
+        Error: {
+          type: "object",
+          properties: {
+            error: { type: "string", description: "Message d'erreur" }
+          }
+        }
+      }
+    }
+  },
+  apis: ["./src/routes/*.js"], // Chemin vers les fichiers contenant les annotations
+};
+
+const specs = swaggerJsdoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "Leboncoin-like API Documentation"
+}));
+
+import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
@@ -28,7 +133,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: "http://localhost:" + (process.env.PORT || 4000),
+        url: `http://localhost:${process.env.PORT || 4000}`,
         description: "Serveur de développement"
       }
     ],
@@ -117,11 +222,11 @@ app.use("/listings", listingRoutes);
 app.get("/", (req, res) => {
   res.json({ 
     message: "API opérationnelle",
-    documentation: "http://localhost:" + (process.env.PORT || 4000) + "/api-docs"
+    documentation: `http://localhost:${process.env.PORT || 4000}/api-docs`
   });
 });
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log("✅ Serveur API démarré sur http://localhost:" + PORT);
+  console.log(`✅ Serveur API démarré sur http://localhost:${PORT}`);
 });
