@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pkg from '@prisma/client';
+import { ConflictError, AuthenticationError, NotFoundError } from '../middlewares/errorHandler.js';
 
 const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
@@ -21,31 +22,9 @@ const sanitizeUser = (user) => {
 };
 
 // POST /auth/register
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
     const { email, password, name, phone } = req.body;
-
-    // Validation des champs requis
-    if (!email || !password || !name) {
-      return res.status(400).json({
-        error: 'Email, password et name sont requis'
-      });
-    }
-
-    // Validation de l'email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        error: 'Format d\'email invalide'
-      });
-    }
-
-    // Validation de la longueur du mot de passe
-    if (password.length < 6) {
-      return res.status(400).json({
-        error: 'Le mot de passe doit contenir au moins 6 caractères'
-      });
-    }
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({
@@ -53,9 +32,7 @@ export const register = async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({
-        error: 'Un utilisateur avec cet email existe déjà'
-      });
+      throw new ConflictError('Un utilisateur avec cet email existe déjà');
     }
 
     // Hasher le mot de passe
@@ -83,24 +60,14 @@ export const register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur lors de l\'inscription:', error);
-    res.status(500).json({
-      error: 'Erreur serveur lors de l\'inscription'
-    });
+    next(error);
   }
 };
 
 // POST /auth/login
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    // Validation des champs requis
-    if (!email || !password) {
-      return res.status(400).json({
-        error: 'Email et password sont requis'
-      });
-    }
 
     // Trouver l'utilisateur par email
     const user = await prisma.user.findUnique({
@@ -108,18 +75,14 @@ export const login = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(401).json({
-        error: 'Identifiants invalides'
-      });
+      throw new AuthenticationError('Identifiants invalides');
     }
 
     // Vérifier le mot de passe
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!isPasswordValid) {
-      return res.status(401).json({
-        error: 'Identifiants invalides'
-      });
+      throw new AuthenticationError('Identifiants invalides');
     }
 
     // Générer un token
@@ -133,15 +96,12 @@ export const login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
-    res.status(500).json({
-      error: 'Erreur serveur lors de la connexion'
-    });
+    next(error);
   }
 };
 
 // GET /me
-export const me = async (req, res) => {
+export const me = async (req, res, next) => {
   try {
     // req.userId est défini par le middleware d'auth
     const user = await prisma.user.findUnique({
@@ -156,9 +116,7 @@ export const me = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({
-        error: 'Utilisateur non trouvé'
-      });
+      throw new NotFoundError('Utilisateur non trouvé');
     }
 
     // Retourner l'utilisateur avec ses annonces (sans le mot de passe)
@@ -167,9 +125,6 @@ export const me = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur lors de la récupération du profil:', error);
-    res.status(500).json({
-      error: 'Erreur serveur lors de la récupération du profil'
-    });
+    next(error);
   }
 };

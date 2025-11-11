@@ -1,6 +1,8 @@
 import express from 'express';
-import { getListings, getListingById, createListing } from '../controllers/listingController.js';
+import { getListing, createListingHandler, updateListingHandler, deleteListingHandler } from '../controllers/listingController.js';
 import { authMiddleware } from '../middlewares/auth.js';
+import { validateBody, validateParams } from '../middlewares/validation.js';
+import { createListingSchema, updateListingSchema, idParamSchema } from '../schemas/validationSchemas.js';
 
 const router = express.Router();
 
@@ -127,157 +129,12 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/', getListings);
+// Route publique pour récupérer une annonce
+router.get('/:id', validateParams(idParamSchema), getListing);
 
-/**
- * @swagger
- * /listings/{id}:
- *   get:
- *     summary: Récupère une annonce par son ID
- *     tags: [Listings]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *           minimum: 1
- *         description: ID de l'annonce
- *         example: 1
- *     responses:
- *       200:
- *         description: Annonce récupérée avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Annonce récupérée avec succès"
- *                 data:
- *                   allOf:
- *                     - $ref: '#/components/schemas/Listing'
- *                     - type: object
- *                       properties:
- *                         user:
- *                           type: object
- *                           properties:
- *                             id: { type: "integer" }
- *                             name: { type: "string" }
- *                             phone: { type: "string", nullable: true }
- *                         category:
- *                           $ref: '#/components/schemas/Category'
- *       400:
- *         description: ID invalide
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Annonce non trouvée
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erreur serveur
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.get('/:id', getListingById);
-
-/**
- * @swagger
- * /listings:
- *   post:
- *     summary: Créer une nouvelle annonce
- *     tags: [Listings]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - description
- *               - price
- *               - location
- *               - categoryId
- *             properties:
- *               title:
- *                 type: string
- *                 minLength: 3
- *                 maxLength: 100
- *                 description: Titre de l'annonce
- *                 example: "iPhone 13 Pro Max 256GB"
- *               description:
- *                 type: string
- *                 minLength: 10
- *                 maxLength: 2000
- *                 description: Description détaillée de l'annonce
- *                 example: "iPhone en excellent état, très peu utilisé..."
- *               price:
- *                 type: number
- *                 minimum: 0
- *                 description: Prix de l'annonce
- *                 example: 899.99
- *               location:
- *                 type: string
- *                 description: Localisation de l'annonce
- *                 example: "Paris, 75001"
- *               categoryId:
- *                 type: integer
- *                 minimum: 1
- *                 description: ID de la catégorie
- *                 example: 3
- *     responses:
- *       201:
- *         description: Annonce créée avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Annonce créée avec succès"
- *                 data:
- *                   allOf:
- *                     - $ref: '#/components/schemas/Listing'
- *                     - type: object
- *                       properties:
- *                         user:
- *                           type: object
- *                           properties:
- *                             id: { type: "integer" }
- *                             name: { type: "string" }
- *                         category:
- *                           $ref: '#/components/schemas/Category'
- *       400:
- *         description: Données invalides
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erreur serveur
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post('/', authMiddleware, createListing);
+// Routes protégées (authentification requise)
+router.post('/', authMiddleware, validateBody(createListingSchema), createListingHandler);
+router.put('/:id', authMiddleware, validateParams(idParamSchema), validateBody(updateListingSchema), updateListingHandler);
+router.delete('/:id', authMiddleware, validateParams(idParamSchema), deleteListingHandler);
 
 export default router;

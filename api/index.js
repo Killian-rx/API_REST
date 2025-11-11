@@ -6,6 +6,7 @@ import swaggerJsdoc from "swagger-jsdoc";
 import authRoutes from "./src/routes/authRoutes.js";
 import categoryRoutes from "./src/routes/categoryRoutes.js";
 import listingRoutes from "./src/routes/listingRoutes.js";
+import { errorHandler } from "./src/middlewares/errorHandler.js";
 
 dotenv.config();
 
@@ -121,7 +122,10 @@ app.get("/", (req, res) => {
   });
 });
 
+// Middleware global de gestion d'erreurs (doit être en dernier)
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log("✅ Serveur API démarré sur http://localhost:" + PORT);
+  console.log("Serveur API démarré sur http://localhost:" + PORT);
 });
