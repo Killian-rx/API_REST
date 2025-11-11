@@ -5,6 +5,108 @@ const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
 
 /**
+ * Récupère toutes les annonces avec pagination et filtres
+ * @param {Object} filters - Les filtres (q, categoryId, minPrice, maxPrice)
+ * @param {number} page - Le numéro de page
+ * @param {number} pageSize - Le nombre d'éléments par page
+ * @returns {Promise<Object>} Les annonces avec métadonnées de pagination
+ */
+export const getAllListings = async (filters = {}, page = 1, pageSize = 10) => {
+  try {
+    // S'assurer que page et pageSize sont des nombres
+    const pageNum = parseInt(page, 10) || 1;
+    const pageSizeNum = parseInt(pageSize, 10) || 10;
+
+    // Construction des conditions de filtrage
+    const where = {
+      status: 'ACTIVE' // Ne récupérer que les annonces actives
+    };
+
+    // Filtre de recherche textuelle
+    if (filters.q) {
+      where.OR = [
+        { title: { contains: filters.q, mode: 'insensitive' } },
+        { description: { contains: filters.q, mode: 'insensitive' } }
+      ];
+    }
+
+    // Filtre par catégorie
+    if (filters.categoryId) {
+      where.categoryId = parseInt(filters.categoryId);
+    }
+
+    // Filtres par prix
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+      where.price = {};
+      if (filters.minPrice !== undefined) {
+        where.price.gte = parseFloat(filters.minPrice);
+      }
+      if (filters.maxPrice !== undefined) {
+        where.price.lte = parseFloat(filters.maxPrice);
+      }
+    }
+
+    // Calcul de l'offset pour la pagination
+    const skip = (pageNum - 1) * pageSizeNum;
+
+    // Récupération des annonces avec comptage
+    const [listings, total] = await Promise.all([
+      prisma.listing.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          price: true,
+          location: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          category: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          user: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        },
+        skip,
+        take: pageSizeNum,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      }),
+      prisma.listing.count({ where })
+    ]);
+
+    // Calcul des métadonnées de pagination
+    const totalPages = Math.ceil(total / pageSizeNum);
+    const hasNextPage = pageNum < totalPages;
+    const hasPreviousPage = pageNum > 1;
+
+    return {
+      data: listings,
+      meta: {
+        page: pageNum,
+        pageSize: pageSizeNum,
+        total,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage
+      }
+    };
+  } catch (error) {
+    console.error('Erreur lors de la récupération des annonces:', error);
+    throw error;
+  }
+};
+
+/**
  * Récupère une annonce par son ID avec ses relations
  * @param {number} id - L'ID de l'annonce
  * @returns {Promise<Object|null>} L'annonce avec catégorie et infos vendeur ou null

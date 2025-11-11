@@ -1,5 +1,29 @@
-import { getListingById, createListing, updateListing, deleteListing } from '../services/listingService.js';
+import { getAllListings, getListingById, createListing, updateListing, deleteListing } from '../services/listingService.js';
 import { NotFoundError, AuthorizationError } from '../middlewares/errorHandler.js';
+
+/**
+ * GET / - Récupérer toutes les annonces avec pagination et filtres
+ */
+export const getListings = async (req, res, next) => {
+  try {
+    const { q, categoryId, minPrice, maxPrice, page, pageSize } = req.query;
+
+    const filters = {};
+    if (q) filters.q = q;
+    if (categoryId) filters.categoryId = categoryId;
+    if (minPrice !== undefined) filters.minPrice = minPrice;
+    if (maxPrice !== undefined) filters.maxPrice = maxPrice;
+
+    const result = await getAllListings(filters, page, pageSize);
+
+    res.status(200).json({
+      message: 'Annonces récupérées avec succès',
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * GET /:id - Récupérer une annonce par ID

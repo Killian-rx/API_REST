@@ -1,30 +1,69 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <h1 class="logo">LeBoncoin-like</h1>
+          
+          <!-- Informations utilisateur -->
+          <div v-if="isAuthenticated" class="user-info">
+            <span>Bonjour, {{ currentUser?.name }} !</span>
+            <button @click="handleLogout" class="btn btn-secondary btn-small">
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <main class="container">
+      <!-- Si non connecté : formulaire d'authentification -->
+      <div v-if="!isAuthenticated" class="main-content" style="grid-template-columns: 1fr; max-width: 500px; margin: 0 auto;">
+        <AuthForm />
+      </div>
+
+      <!-- Si connecté : interface principale -->
+      <div v-else class="main-content">
+        <!-- Sidebar : Formulaire de création -->
+        <aside>
+          <CreateListingForm />
+        </aside>
+
+        <!-- Contenu principal : Annonces -->
+        <section>
+          <ListingsGrid />
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer simple -->
+    <footer class="text-center mt-3">
+      <div class="container">
+        <p class="text-muted">
+          API LeBoncoin-like - Vue 3 + TypeScript
+        </p>
+      </div>
+    </footer>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { useAuth } from '@/composables/useAuth'
+import AuthForm from '@/components/AuthForm.vue'
+import CreateListingForm from '@/components/CreateListingForm.vue'
+import ListingsGrid from '@/components/ListingsGrid.vue'
+
+const { currentUser, isAuthenticated, logout, checkAuth } = useAuth()
+
+const handleLogout = () => {
+  logout()
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+
+// Vérifier l'authentification au chargement
+onMounted(() => {
+  checkAuth()
+})
+</script>

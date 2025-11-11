@@ -1,8 +1,8 @@
 import express from 'express';
-import { getListing, createListingHandler, updateListingHandler, deleteListingHandler } from '../controllers/listingController.js';
+import { getListings, getListing, createListingHandler, updateListingHandler, deleteListingHandler } from '../controllers/listingController.js';
 import { authMiddleware } from '../middlewares/auth.js';
-import { validateBody, validateParams } from '../middlewares/validation.js';
-import { createListingSchema, updateListingSchema, idParamSchema } from '../schemas/validationSchemas.js';
+import { validateBody, validateParams, validateQuery } from '../middlewares/validation.js';
+import { createListingSchema, updateListingSchema, idParamSchema, getListingsQuerySchema } from '../schemas/validationSchemas.js';
 
 const router = express.Router();
 
@@ -129,7 +129,10 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-// Route publique pour récupérer une annonce
+// Route publique pour récupérer toutes les annonces avec filtres et pagination
+router.get('/', validateQuery(getListingsQuerySchema), getListings);
+
+// Route publique pour récupérer une annonce par ID
 router.get('/:id', validateParams(idParamSchema), getListing);
 
 // Routes protégées (authentification requise)

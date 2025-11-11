@@ -16,8 +16,10 @@ export const validateBody = (schema) => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Récupère le premier message d'erreur de validation
-        const firstError = error.errors[0];
-        const message = `${firstError.path.join('.')} ${firstError.message}`.toLowerCase();
+        const firstError = error.errors && error.errors.length > 0 ? error.errors[0] : null;
+        const message = firstError 
+          ? `${firstError.path.join('.')} ${firstError.message}`.toLowerCase()
+          : 'Erreur de validation';
         next(new ValidationError(message));
       } else {
         next(error);
@@ -36,13 +38,17 @@ export const validateQuery = (schema) => {
     try {
       // Valide et parse les query params avec Zod
       const validatedQuery = schema.parse(req.query);
-      req.query = validatedQuery; // Remplace la query par les données validées
+      // Remplace les propriétés individuellement plutôt que l'objet entier
+      Object.keys(req.query).forEach(key => delete req.query[key]);
+      Object.assign(req.query, validatedQuery);
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Récupère le premier message d'erreur de validation
-        const firstError = error.errors[0];
-        const message = `${firstError.path.join('.')} ${firstError.message}`.toLowerCase();
+        const firstError = error.errors && error.errors.length > 0 ? error.errors[0] : null;
+        const message = firstError 
+          ? `${firstError.path.join('.')} ${firstError.message}`.toLowerCase()
+          : 'Erreur de validation';
         next(new ValidationError(message));
       } else {
         next(error);
@@ -66,8 +72,10 @@ export const validateParams = (schema) => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Récupère le premier message d'erreur de validation
-        const firstError = error.errors[0];
-        const message = `${firstError.path.join('.')} ${firstError.message}`.toLowerCase();
+        const firstError = error.errors && error.errors.length > 0 ? error.errors[0] : null;
+        const message = firstError 
+          ? `${firstError.path.join('.')} ${firstError.message}`.toLowerCase()
+          : 'Erreur de validation';
         next(new ValidationError(message));
       } else {
         next(error);
