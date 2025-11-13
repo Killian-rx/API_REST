@@ -166,8 +166,11 @@ export const removeFavoriteHandler = async (req, res, next) => {
 export const getFavoritesHandler = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const listings = await getFavoritesByUser(userId);
-    res.status(200).json({ data: listings });
+    const favorites = await getFavoritesByUser(userId);
+    res.status(200).json({
+      message: 'Favoris récupérés avec succès',
+      data: favorites
+    });
   } catch (error) {
     next(error);
   }
