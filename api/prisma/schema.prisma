@@ -25,6 +25,7 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   listings    Listing[]
+  favorites   Favorite[]
 
   @@map("users")
 }
@@ -48,10 +49,23 @@ model Listing {
   status      ListingStatus @default(ACTIVE)
   userId      Int
   categoryId  Int
+  favorites   Favorite[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   category    Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   @@map("listings")
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId  Int
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@map("favorites")
 }

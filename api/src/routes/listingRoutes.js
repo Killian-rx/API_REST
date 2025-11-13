@@ -1,5 +1,5 @@
 import express from 'express';
-import { getListings, getListing, createListingHandler, updateListingHandler, deleteListingHandler } from '../controllers/listingController.js';
+import { getListings, getListing, createListingHandler, updateListingHandler, deleteListingHandler, addFavoriteHandler, removeFavoriteHandler, getFavoritesHandler } from '../controllers/listingController.js';
 import { authMiddleware } from '../middlewares/auth.js';
 import { validateBody, validateParams, validateQuery } from '../middlewares/validation.js';
 import { createListingSchema, updateListingSchema, idParamSchema, getListingsQuerySchema } from '../schemas/validationSchemas.js';
@@ -132,6 +132,9 @@ const router = express.Router();
 // Route publique pour récupérer toutes les annonces avec filtres et pagination
 router.get('/', validateQuery(getListingsQuerySchema), getListings);
 
+// Routes liées aux favoris (utilisateur connecté)
+router.get('/favorites', authMiddleware, getFavoritesHandler);
+
 // Route publique pour récupérer une annonce par ID
 router.get('/:id', validateParams(idParamSchema), getListing);
 
@@ -139,5 +142,8 @@ router.get('/:id', validateParams(idParamSchema), getListing);
 router.post('/', authMiddleware, validateBody(createListingSchema), createListingHandler);
 router.put('/:id', authMiddleware, validateParams(idParamSchema), validateBody(updateListingSchema), updateListingHandler);
 router.delete('/:id', authMiddleware, validateParams(idParamSchema), deleteListingHandler);
+// Favoris
+router.post('/:id/favorite', authMiddleware, validateParams(idParamSchema), addFavoriteHandler);
+router.delete('/:id/favorite', authMiddleware, validateParams(idParamSchema), removeFavoriteHandler);
 
 export default router;

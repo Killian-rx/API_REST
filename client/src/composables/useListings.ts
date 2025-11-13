@@ -62,6 +62,38 @@ export function useListings() {
     }
   }
 
+  const addFavorite = async (id: number) => {
+    try {
+      await apiService.addFavorite(id)
+    } catch (error) {
+      listingsError.value = error instanceof Error ? error.message : 'Erreur lors de l\'ajout au favoris'
+      throw error
+    }
+  }
+
+  const removeFavorite = async (id: number) => {
+    try {
+      await apiService.removeFavorite(id)
+    } catch (error) {
+      listingsError.value = error instanceof Error ? error.message : 'Erreur lors de la suppression du favoris'
+      throw error
+    }
+  }
+
+  const loadFavorites = async () => {
+    try {
+      isLoadingListings.value = true
+      const response = await apiService.getMyFavorites()
+      // Ne pas réécrire la liste principale ici — retourner seulement les favoris
+      return response.data
+    } catch (error) {
+      listingsError.value = error instanceof Error ? error.message : 'Erreur lors du chargement des favoris'
+      throw error
+    } finally {
+      isLoadingListings.value = false
+    }
+  }
+
   const clearError = () => {
     listingsError.value = null
   }
@@ -76,6 +108,9 @@ export function useListings() {
     loadListings,
     createListing,
     deleteListing,
+    addFavorite,
+    removeFavorite,
+    loadFavorites,
     clearError
   }
 }

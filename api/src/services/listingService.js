@@ -293,3 +293,71 @@ export const deleteListing = async (id, userId) => {
     throw error;
   }
 };
+
+/**
+ * Ajoute un listing aux favoris d'un utilisateur
+ * @param {number} listingId
+ * @param {number} userId
+ */
+export const addFavorite = async (listingId, userId) => {
+  try {
+    const listing = await prisma.listing.findUnique({ where: { id: parseInt(listingId) } });
+    if (!listing) throw new Error('LISTING_NOT_FOUND');
+
+    const favorite = await prisma.favorite.create({
+      data: {
+        listingId: parseInt(listingId),
+        userId: parseInt(userId)
+      }
+    });
+
+    return favorite;
+  } catch (error) {
+    // Prisma unique constraint error code P2002
+    if (error && error.code === 'P2002') {
+      return null; // already favorited
+    }
+    console.error('Erreur addFavorite:', error);
+    throw error;
+  }
+};
+
+/**
+ * Supprime un favori
+ * @param {number} listingId
+ * @param {number} userId
+ */
+export const removeFavorite = async (listingId, userId) => {
+  try {
+    const result = await prisma.favorite.deleteMany({
+      where: {
+        listingId: parseInt(listingId),
+        userId: parseInt(userId)
+      }
+    });
+
+    return result.count > 0;
+  } catch (error) {
+    console.error('Erreur removeFavorite:', error);
+    throw error;
+  }
+};
+
+/**
+ * Récupère les listings favoris d'un utilisateur
+ * @param {number} userId
+ */
+export const getFavoritesByUser = async (userId) => {
+  try {
+    const favorites = await prisma.favorite.findMany({
+      where: { userId: parseInt(userId) },
+      include: { listing: { include: { category: true, user: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return favorites.map(f => f.listing);
+  } catch (error) {
+    console.error('Erreur getFavoritesByUser:', error);
+    throw error;
+  }
+};

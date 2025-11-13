@@ -206,6 +206,23 @@ class ApiService {
     });
   }
 
+  // Favoris
+  async addFavorite(listingId: number): Promise<{ message?: string }> {
+    return this.request(`/listings/${listingId}/favorite`, {
+      method: 'POST'
+    });
+  }
+
+  async removeFavorite(listingId: number): Promise<{ message?: string }> {
+    return this.request(`/listings/${listingId}/favorite`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getMyFavorites(): Promise<{ data: Listing[] }> {
+    return this.request(`/listings/favorites`);
+  }
+
   // Vérification de l'état d'authentification
   isAuthenticated(): boolean {
     return TokenManager.isAuthenticated();

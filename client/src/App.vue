@@ -31,9 +31,15 @@
           <CreateListingForm />
         </aside>
 
-        <!-- Contenu principal : Annonces -->
+        <!-- Contenu principal : Annonces / Favoris -->
         <section>
-          <ListingsGrid />
+          <div class="view-switch" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+            <button class="btn" :class="{ 'btn-primary': view === 'listings' }" @click="view = 'listings'">Annonces</button>
+            <button class="btn" :class="{ 'btn-primary': view === 'favorites' }" @click="view = 'favorites'">Favoris</button>
+          </div>
+
+          <ListingsGrid v-if="view === 'listings'" />
+          <FavoritesPage v-else />
         </section>
       </div>
     </main>
@@ -50,11 +56,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import AuthForm from '@/components/AuthForm.vue'
 import CreateListingForm from '@/components/CreateListingForm.vue'
 import ListingsGrid from '@/components/ListingsGrid.vue'
+import FavoritesPage from '@/components/FavoritesPage.vue'
 
 const { currentUser, isAuthenticated, logout, checkAuth } = useAuth()
 
@@ -66,4 +73,6 @@ const handleLogout = () => {
 onMounted(() => {
   checkAuth()
 })
+
+const view = ref<'listings'|'favorites'>('listings')
 </script>

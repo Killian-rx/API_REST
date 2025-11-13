@@ -83,6 +83,19 @@
               <span v-else>Supprimer</span>
             </button>
           </div>
+          <!-- Bouton favoris -->
+          <div class="listing-actions">
+            <button
+              v-if="currentUser"
+              @click.stop.prevent="toggleFavorite(listing.id)"
+              :aria-pressed="isFavorited(listing.id)"
+              :title="isFavorited(listing.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+              class="btn btn-link btn-small"
+            >
+              <span v-if="isFavorited(listing.id)" style="color: #e0245e; font-size: 1.25rem;">♥</span>
+              <span v-else style="color: #666; font-size: 1.25rem;">♡</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -125,7 +138,10 @@ const {
   isLoadingListings, 
   listingsError,
   currentPage,
-  totalPages
+  totalPages,
+  addFavorite,
+  removeFavorite,
+  loadFavorites
 } = useListings()
 
 const { categories, loadCategories } = useCategories()
@@ -134,6 +150,7 @@ const { currentUser } = useAuth()
 const searchQuery = ref('')
 const selectedCategory = ref('')
 const isDeleting = reactive<Record<number, boolean>>({})
+const favoriteIds = ref<Set<number>>(new Set())
 
 // Debounce pour la recherche
 let searchTimeout: NodeJS.Timeout
@@ -195,7 +212,41 @@ const truncateText = (text: string, maxLength: number) => {
 onMounted(async () => {
   await loadCategories()
   await loadListings()
+  // Charger les favoris de l'utilisateur connecté pour afficher l'état coeur
+  if (currentUser && currentUser.value) {
+    try {
+      const favs = await loadFavorites()
+      favoriteIds.value = new Set(favs.map((l: any) => l.id))
+    } catch (err) {
+      // ignore
+    }
+  }
 })
+
+const isFavorited = (id: number) => favoriteIds.value.has(id)
+
+const toggleFavorite = async (id: number) => {
+  if (!currentUser || !currentUser.value) {
+    alert('Vous devez être connecté pour ajouter aux favoris')
+    return
+  }
+
+  if (isFavorited(id)) {
+    try {
+      await removeFavorite(id)
+      favoriteIds.value.delete(id)
+    } catch (err) {
+      // handled in composable
+    }
+  } else {
+    try {
+      await addFavorite(id)
+      favoriteIds.value.add(id)
+    } catch (err) {
+      // handled in composable
+    }
+  }
+}
 </script>
 
 <style scoped>

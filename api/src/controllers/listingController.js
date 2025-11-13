@@ -1,4 +1,4 @@
-import { getAllListings, getListingById, createListing, updateListing, deleteListing } from '../services/listingService.js';
+import { getAllListings, getListingById, createListing, updateListing, deleteListing, addFavorite, removeFavorite, getFavoritesByUser } from '../services/listingService.js';
 import { NotFoundError, AuthorizationError } from '../middlewares/errorHandler.js';
 
 /**
@@ -118,5 +118,57 @@ export const deleteListingHandler = async (req, res, next) => {
     } else {
       next(error);
     }
+  }
+};
+
+/**
+ * POST /:id/favorite - Ajouter aux favoris (utilisateur authentifié)
+ */
+export const addFavoriteHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const favorite = await addFavorite(id, userId);
+    if (favorite === null) {
+      // déjà en favori
+      return res.status(200).json({ message: 'Déjà en favoris' });
+    }
+
+    res.status(201).json({ message: 'Ajouté aux favoris' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /:id/favorite - Retirer des favoris
+ */
+export const removeFavoriteHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const removed = await removeFavorite(id, userId);
+    if (!removed) {
+      return res.status(404).json({ message: 'Favori introuvable' });
+    }
+
+    res.status(200).json({ message: 'Retiré des favoris' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /favorites - Récupère les favoris de l'utilisateur courant
+ */
+export const getFavoritesHandler = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const listings = await getFavoritesByUser(userId);
+    res.status(200).json({ data: listings });
+  } catch (error) {
+    next(error);
   }
 };
