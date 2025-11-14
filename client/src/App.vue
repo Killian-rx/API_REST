@@ -43,15 +43,6 @@
         </section>
       </div>
     </main>
-
-    <!-- Footer simple -->
-    <footer class="text-center mt-3">
-      <div class="container">
-        <p class="text-muted">
-          API LeBoncoin-like - Vue 3 + TypeScript
-        </p>
-      </div>
-    </footer>
   </div>
 </template>
 
