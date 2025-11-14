@@ -133,17 +133,361 @@ const router = express.Router();
 router.get('/', validateQuery(getListingsQuerySchema), getListings);
 
 // Routes liées aux favoris (utilisateur connecté)
+/**
+ * @swagger
+ * /listings/favorites:
+ *   get:
+ *     summary: Récupère les annonces favorites de l'utilisateur connecté
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Favoris récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Favoris récupérés avec succès"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Favorite'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/favorites', authMiddleware, getFavoritesHandler);
 
 // Route publique pour récupérer une annonce par ID
+/**
+ * @swagger
+ * /listings/{id}:
+ *   get:
+ *     summary: Récupère une annonce par son ID
+ *     tags: [Listings]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Identifiant de l'annonce
+ *     responses:
+ *       200:
+ *         description: Annonce récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Annonce récupérée avec succès"
+ *                 data:
+ *                   $ref: '#/components/schemas/Listing'
+ *       400:
+ *         description: Paramètres invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Annonce introuvable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/:id', validateParams(idParamSchema), getListing);
 
 // Routes protégées (authentification requise)
+/**
+ * @swagger
+ * /listings:
+ *   post:
+ *     summary: Crée une nouvelle annonce
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateListingInput'
+ *     responses:
+ *       201:
+ *         description: Annonce créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Annonce créée avec succès"
+ *                 data:
+ *                   $ref: '#/components/schemas/Listing'
+ *       400:
+ *         description: Corps de requête invalide
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/', authMiddleware, validateBody(createListingSchema), createListingHandler);
+/**
+ * @swagger
+ * /listings/{id}:
+ *   put:
+ *     summary: Met à jour une annonce existante
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Identifiant de l'annonce
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateListingInput'
+ *     responses:
+ *       200:
+ *         description: Annonce mise à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Annonce mise à jour avec succès"
+ *                 data:
+ *                   $ref: '#/components/schemas/Listing'
+ *       400:
+ *         description: Paramètres ou corps de requête invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Annonce introuvable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.put('/:id', authMiddleware, validateParams(idParamSchema), validateBody(updateListingSchema), updateListingHandler);
+/**
+ * @swagger
+ * /listings/{id}:
+ *   delete:
+ *     summary: Supprime une annonce
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Identifiant de l'annonce
+ *     responses:
+ *       200:
+ *         description: Annonce supprimée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Annonce supprimée avec succès"
+ *       400:
+ *         description: Paramètres invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Annonce introuvable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.delete('/:id', authMiddleware, validateParams(idParamSchema), deleteListingHandler);
 // Favoris
+/**
+ * @swagger
+ * /listings/{id}/favorite:
+ *   post:
+ *     summary: Ajoute une annonce aux favoris de l'utilisateur connecté
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Identifiant de l'annonce
+ *     responses:
+ *       200:
+ *         description: Annonce ajoutée aux favoris
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Annonce ajoutée aux favoris"
+ *       400:
+ *         description: Paramètres invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Annonce introuvable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/:id/favorite', authMiddleware, validateParams(idParamSchema), addFavoriteHandler);
+/**
+ * @swagger
+ * /listings/{id}/favorite:
+ *   delete:
+ *     summary: Retire une annonce des favoris de l'utilisateur connecté
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Identifiant de l'annonce
+ *     responses:
+ *       200:
+ *         description: Annonce retirée des favoris
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Annonce retirée des favoris"
+ *       400:
+ *         description: Paramètres invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Annonce introuvable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.delete('/:id/favorite', authMiddleware, validateParams(idParamSchema), removeFavoriteHandler);
 
 export default router;

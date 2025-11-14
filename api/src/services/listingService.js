@@ -351,11 +351,40 @@ export const getFavoritesByUser = async (userId) => {
   try {
     const favorites = await prisma.favorite.findMany({
       where: { userId: parseInt(userId) },
-      include: { listing: { include: { category: true, user: true } } },
+      select: {
+        id: true,
+        userId: true,
+        listingId: true,
+        createdAt: true,
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            price: true,
+            location: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            category: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            user: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
 
-    return favorites.map(f => f.listing);
+    return favorites;
   } catch (error) {
     console.error('Erreur getFavoritesByUser:', error);
     throw error;

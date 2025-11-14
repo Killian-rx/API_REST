@@ -87,6 +87,59 @@ const swaggerOptions = {
             updatedAt: { type: "string", format: "date-time", description: "Date de dernière mise à jour" }
           }
         },
+        CreateListingInput: {
+          type: "object",
+          required: ["title", "description", "price", "location", "categoryId"],
+          properties: {
+            title: { type: "string", description: "Titre de l'annonce" },
+            description: { type: "string", description: "Description de l'annonce" },
+            price: { type: "number", format: "decimal", description: "Prix demandé" },
+            location: { type: "string", description: "Localisation de l'annonce" },
+            categoryId: { type: "integer", description: "Identifiant de la catégorie" }
+          }
+        },
+        UpdateListingInput: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "Titre de l'annonce" },
+            description: { type: "string", description: "Description de l'annonce" },
+            price: { type: "number", format: "decimal", description: "Prix demandé" },
+            location: { type: "string", description: "Localisation de l'annonce" },
+            categoryId: { type: "integer", description: "Identifiant de la catégorie" },
+            status: {
+              type: "string",
+              enum: ["ACTIVE", "SOLD", "ARCHIVED"],
+              description: "Statut de l'annonce"
+            }
+          }
+        },
+        Favorite: {
+          type: "object",
+          properties: {
+            id: { type: "integer", description: "ID unique du favori" },
+            userId: { type: "integer", description: "ID de l'utilisateur" },
+            listingId: { type: "integer", description: "ID de l'annonce" },
+            createdAt: { type: "string", format: "date-time", description: "Date d'ajout aux favoris" },
+            listing: {
+              allOf: [
+                { $ref: "#/components/schemas/Listing" },
+                {
+                  type: "object",
+                  properties: {
+                    category: { $ref: "#/components/schemas/Category" },
+                    user: {
+                      type: "object",
+                      properties: {
+                        id: { type: "integer" },
+                        name: { type: "string" }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
         Error: {
           type: "object",
           properties: {
