@@ -215,7 +215,7 @@ export const updateListing = async (id, userId, data) => {
     }
 
     if (existingListing.userId !== parseInt(userId)) {
-      throw new Error('FORBIDDEN'); // L'utilisateur n'est pas le propriétaire
+      throw new AuthorizationError('Vous n\'êtes pas autorisé à modifier cette annonce');
     }
 
     // Préparer les données à mettre à jour
@@ -280,7 +280,7 @@ export const deleteListing = async (id, userId) => {
     }
 
     if (existingListing.userId !== parseInt(userId)) {
-      throw new Error('FORBIDDEN'); // L'utilisateur n'est pas le propriétaire
+      throw new AuthorizationError('Vous n\'êtes pas autorisé à supprimer cette annonce');
     }
 
     await prisma.listing.delete({
@@ -302,7 +302,9 @@ export const deleteListing = async (id, userId) => {
 export const addFavorite = async (listingId, userId) => {
   try {
     const listing = await prisma.listing.findUnique({ where: { id: parseInt(listingId) } });
-    if (!listing) throw new Error('LISTING_NOT_FOUND');
+    if (!listing) {
+      throw new NotFoundError('Annonce non trouvée');
+    }
 
     const favorite = await prisma.favorite.create({
       data: {
@@ -313,9 +315,13 @@ export const addFavorite = async (listingId, userId) => {
 
     return favorite;
   } catch (error) {
-    // Prisma unique constraint error code P2002
+    // Prisma unique constraint error code P2002 (déjà en favoris)
     if (error && error.code === 'P2002') {
-      return null; // already favorited
+      return null; // already favorited - sera géré par le contrôleur
+    }
+    // Si c'est déjà une erreur personnalisée, la relancer
+    if (error.type) {
+      throw error;
     }
     console.error('Erreur addFavorite:', error);
     throw error;

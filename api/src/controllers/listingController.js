@@ -1,5 +1,5 @@
 import { getAllListings, getListingById, createListing, updateListing, deleteListing, addFavorite, removeFavorite, getFavoritesByUser } from '../services/listingService.js';
-import { NotFoundError, AuthorizationError } from '../middlewares/errorHandler.js';
+import { NotFoundError, AuthorizationError, ConflictError } from '../middlewares/errorHandler.js';
 
 /**
  * GET / - Récupérer toutes les annonces avec pagination et filtres
@@ -86,11 +86,7 @@ export const updateListingHandler = async (req, res, next) => {
 
     res.status(200).json(updatedListing);
   } catch (error) {
-    if (error.message === 'FORBIDDEN') {
-      next(new AuthorizationError('Vous ne pouvez modifier que vos propres annonces'));
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
@@ -113,11 +109,7 @@ export const deleteListingHandler = async (req, res, next) => {
       message: 'Annonce supprimée avec succès' 
     });
   } catch (error) {
-    if (error.message === 'FORBIDDEN') {
-      next(new AuthorizationError('Vous ne pouvez supprimer que vos propres annonces'));
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
@@ -131,8 +123,8 @@ export const addFavoriteHandler = async (req, res, next) => {
 
     const favorite = await addFavorite(id, userId);
     if (favorite === null) {
-      // déjà en favori
-      return res.status(200).json({ message: 'Déjà en favoris' });
+      // déjà en favori - 409 Conflict est plus approprié
+      throw new ConflictError('Cette annonce est déjà dans vos favoris');
     }
 
     res.status(201).json({ message: 'Ajouté aux favoris' });
@@ -151,7 +143,7 @@ export const removeFavoriteHandler = async (req, res, next) => {
 
     const removed = await removeFavorite(id, userId);
     if (!removed) {
-      return res.status(404).json({ message: 'Favori introuvable' });
+      throw new NotFoundError('Favori introuvable');
     }
 
     res.status(200).json({ message: 'Retiré des favoris' });

@@ -1,10 +1,11 @@
 import * as categoryService from '../services/categoryService.js';
+import { NotFoundError, ValidationError } from '../middlewares/errorHandler.js';
 
 /**
  * GET /categories
  * Récupère toutes les catégories
  */
-export const getCategories = async (req, res) => {
+export const getCategories = async (req, res, next) => {
   try {
     const categories = await categoryService.getAllCategories();
 
@@ -15,10 +16,7 @@ export const getCategories = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur lors de la récupération des catégories:', error);
-    res.status(500).json({
-      error: 'Erreur serveur lors de la récupération des catégories'
-    });
+    next(error);
   }
 };
 
@@ -26,23 +24,19 @@ export const getCategories = async (req, res) => {
  * GET /categories/:id
  * Récupère une catégorie par son ID
  */
-export const getCategoryById = async (req, res) => {
+export const getCategoryById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     // Validation de l'ID
     if (!id || isNaN(parseInt(id))) {
-      return res.status(400).json({
-        error: 'ID de catégorie invalide'
-      });
+      throw new ValidationError('ID de catégorie invalide');
     }
 
     const category = await categoryService.getCategoryById(id);
 
     if (!category) {
-      return res.status(404).json({
-        error: 'Catégorie non trouvée'
-      });
+      throw new NotFoundError('Catégorie non trouvée');
     }
 
     res.status(200).json({
@@ -51,10 +45,7 @@ export const getCategoryById = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur lors de la récupération de la catégorie:', error);
-    res.status(500).json({
-      error: 'Erreur serveur lors de la récupération de la catégorie'
-    });
+    next(error);
   }
 };
 
@@ -62,23 +53,19 @@ export const getCategoryById = async (req, res) => {
  * GET /categories/slug/:slug
  * Récupère une catégorie par son slug
  */
-export const getCategoryBySlug = async (req, res) => {
+export const getCategoryBySlug = async (req, res, next) => {
   try {
     const { slug } = req.params;
 
     // Validation du slug
     if (!slug || slug.trim() === '') {
-      return res.status(400).json({
-        error: 'Slug de catégorie invalide'
-      });
+      throw new ValidationError('Slug de catégorie invalide');
     }
 
     const category = await categoryService.getCategoryBySlug(slug);
 
     if (!category) {
-      return res.status(404).json({
-        error: 'Catégorie non trouvée'
-      });
+      throw new NotFoundError('Catégorie non trouvée');
     }
 
     res.status(200).json({
@@ -87,9 +74,6 @@ export const getCategoryBySlug = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur lors de la récupération de la catégorie:', error);
-    res.status(500).json({
-      error: 'Erreur serveur lors de la récupération de la catégorie'
-    });
+    next(error);
   }
 };

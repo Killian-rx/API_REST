@@ -13,7 +13,7 @@ datasource db {
 enum ListingStatus {
   ACTIVE
   SOLD
-  ARCHIVED
+  INACTIVE
 }
 
 model User {
